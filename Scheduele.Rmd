@@ -1,0 +1,41 @@
+Ticker Create DB - One time /D/
+
+PA Create DB - One time /D/
+
+Next Earnings Dates - Daily /D/
+
+Historical Moves Create - One Time /D/
+
+Summaries Create - Weekly /D/
+
+New Earnings Dates Store - Daily /D
+
+New Ticker Create - Weekly /D
+
+New PA Time Create - Weekly /D
+
+New Earnings Moves Create - Daily /D
+
+PA Time Update - Intraday /D
+
+Historical Moves Update - Weekly
+
+
+### One time
+Ticker Create DB - One time 
+PA Create DB - One time
+Historical Moves Create - One Time
+### Weekly
+Summaries Create - Weekly
+New Ticker Create - Weekly
+New PA Time Create - Weekly
+Historical Moves Update - Weekly
+### Daily
+Next Earnings Dates - Daily 
+New Earnings Dates Store - Daily
+New Earnings Moves Create - Daily 
+### Intraday
+PA Time Update - Intraday
+
+
+
