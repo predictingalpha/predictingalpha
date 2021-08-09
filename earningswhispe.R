@@ -1,6 +1,7 @@
 library(rvest)
 library(stringr)
 library(dplyr)
+source("setup.R")
 
 whispers = function(from=0){
   to = ifelse(weekdays(Sys.Date()+from)=="Friday",from+3,from+1)
