@@ -21,11 +21,5 @@ db.earnings.summaries = mongo(collection = "Summaries", db = "pa", url = urlm, v
 db.newTickers = mongo(collection = "newTickers", db = "pa", url = urlm, verbose = F)
 db.readyUploadEr = mongo(collection = "readyUploadEr", db = "pa", url = urlm, verbose = F)
 db.whisper = mongo(collection = "whisper", db = "pa", url = urlm, verbose = F)
+db.timeNow = mongo(collection = "update", db = "pa", url = urlm, verbose = F)
 
-#patime
-#historical moves
-#tickers
-#dbearningsdates
-#dbearningsmovessummaries
-#earningstoUpload
-#newTickers
