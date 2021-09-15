@@ -21,3 +21,4 @@ todays_earnings = whispers()
 
 db.whisper$remove("{}")
 db.whisper$insert(todays_earnings)
+4167565991

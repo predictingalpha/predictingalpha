@@ -17,6 +17,9 @@ x = x%>% filter(ticker %in% tickers$Ticker)
 names(x) = tolower(names(x))
 x$updatedat = as.character(Sys.time() + 60*60) 
 
+db.timeNow$remove("{}")
+db.timeNow$insert(data.frame(updatedat = x$updatedat[1]))
+
 #pull yesterday orats data
 y.date = as.Date(today.core$find(
   '{"Ticker": "AAPL"}',
