@@ -29,6 +29,8 @@ y.date = as.Date(today.core$find(
 
 if(y.date != Sys.Date()){
   x.date = y.date
+}else{
+  x.date = Sys.Date()-1
 }
 #be careful with this as we cant use this since we update intraday
 yesterday = today.core$find(
