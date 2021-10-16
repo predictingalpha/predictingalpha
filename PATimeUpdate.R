@@ -133,6 +133,9 @@ final = final %>% left_join(timz, by = "Ticker")%>% mutate_if(is.numeric, round,
 dims= dim(final)
 
 
+#----------------------------------- IWM WAS IN FINAL UP TO THIS POINT
+
+
 #### upload to database
 ### if still an issue i can add a parallel feature
 s <- split(final, 1:nrow(final))

@@ -1,4 +1,9 @@
 source("setup.R")
+library(tidyverse)
+library(BatchGetSymbols)
+library(bizdays)
+library(sqldf)
+library(derivmkts)
 
 future::plan(future::multisession, 
              workers = 6) 
