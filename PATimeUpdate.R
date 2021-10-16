@@ -55,7 +55,9 @@ df= df1 %>% mutate(PCR = pvolu/cvolu,
                    RV30d = orhvxern20d, 
                    Oi = poi + coi, 
                    PCRoi = poi/coi,
-                   Contango = iv60d/iv30d
+                   Contango = iv60d/iv30d,
+                   Event = ifelse(iv30d==exerniv30d,"No","Yes"),
+                   Weekly = ifelse(ticker %in% weekly_tickers, "Yes", "No")
 )
 
 df = df%>% left_join(tickers%>%select(-Type), by = c("ticker" = "Ticker"))
@@ -115,7 +117,7 @@ final = df.f %>% dplyr::select(all_of(c(names.for.selection, "updatedat", "IvChn
                                         "Name", "Type", "IVvsFV", "ImpMvVsAvgImpmv", "ImpMvVsAvgMv", 
                                         "FV30",  "TimeOfDay",  "DayToEr", "Confirmed",  "ErDate", 'orhvxern90d',
                                         "AvgImpMv", "StraddlePnL", "PutPnL", "CallPnL" , "MedMv", "SpChng", 
-                                        "AvgJump", "AvgMv", "Price", "MktCap", "SkewRank", "IvRank", "Secotr", "Industry")))
+                                        "AvgJump", "AvgMv", "Price", "MktCap", "SkewRank", "IvRank", "Secotr", "Industry", "Event", "Weekly")))
 
 #lets tap into data frame and calc some zscores for different ivols
 
@@ -142,7 +144,7 @@ s <- split(final, 1:nrow(final))
 json_strings <- lapply(s, rjson::toJSON)
 
 
-if(dims[1] > 1200 && dims[2] == 99){
+if(dims[1] > 1200 && dims[2] == 101){
  
 for (val in 1:nrow(final)){
   this_date <- final$Date[val]
