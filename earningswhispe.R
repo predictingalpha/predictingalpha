@@ -1,7 +1,10 @@
 # 0.0 Libraries ----
 
 source("setup.R")
-registerDoParallel(cores = 4)
+library(rvest)
+library(tidyverse)
+library(lubridate)
+library(foreach)
 
 
 # 1.0 Earning Whispers Function ----
@@ -83,7 +86,7 @@ today = whispers()%>%
 
 # 2.1 Pulling the next 30 day's earnings ----
 
-next30 = foreach(i = 0:30, .combine = "bind_rows", .packages = c("rvest", "stringr", "purrr", "dplyr", "rvest")) %dopar% {
+next30 = foreach(i = 0:30, .combine = "bind_rows", .packages = c("rvest", "stringr", "purrr", "dplyr")) %dopar% {
   whispers(i)
 }
 
