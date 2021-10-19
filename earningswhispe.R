@@ -88,7 +88,7 @@ next30 = foreach(i = 0:30, .combine = "bind_rows", .packages = c("rvest", "strin
 }
 
 next30 = next30 %>% distinct() %>%
-  rename("ticker" = Ticker, "ErDate" = Date) %>%
+  rename("ticker" = Ticker, "ErDate" = Date, "TimeOfDay" = Time) %>%
   mutate(Confirmed = ifelse(is.na(Confirmed), "No", "Yes"),
          DayToEr = as.numeric(ErDate - Sys.Date())) %>%
   arrange(ErDate, ticker)

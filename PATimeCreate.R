@@ -4,8 +4,12 @@ tickers = tickers$Ticker
 cal = create.calendar('mycal', weekdays = c("saturday", "sunday"))
 bdays = as.character(rev(bizseq(Sys.Date()-320, Sys.Date(), cal)))
 
+registerDoParallel(cores = 8)
+future::plan(future::multisession, 
+            workers = 10)
 
-df = map_df(tickers, ~Quandl.datatable('ORATS/VOL', tradedate=bdays, ticker = .x,  qopts.columns=c("ticker", "tradedate", "pxatmiv", "clshv20d","orhv10d", "orhv20d", "orhv60d", "orhvxern10d",
+
+df = map_df(tickers, ~Quandl.datatable('ORATS/VOL', tradedate.gte=Sys.Date()-730, paginate = TRUE, ticker = .x,  qopts.columns=c("ticker", "tradedate", "pxatmiv", "clshv20d","orhv10d", "orhv20d", "orhv60d", "orhvxern10d",
                                                                                                         "orhvxern20d", "orhvxern60d", "orhvxern120d", "orhvxern252d", "cvolu", "pvolu", 
                                                                                                         "coi", "poi", "avgoptvolu20d", "borrow30", 
                                                                                                         "slope",  "impliedearningsmov",
@@ -26,7 +30,7 @@ df$PCRoi = df$coi/df$poi
 df$RelativeAction = df$OptVolu/df$avgoptvolu20d
 df$Contango = df$iv90d/df$iv30d
 l.out <- BatchGetSymbols(tickers = unique(df$ticker), 
-                         first.date = Sys.Date()-365, 
+                         first.date = Sys.Date()-730, 
                          last.date = Sys.Date(),
                          thresh.bad.data = .01,
                          do.parallel = TRUE, 
@@ -48,3 +52,6 @@ df = df %>% group_by(Ticker)%>% mutate(IvChng = log(IV30d/lead(IV30d)))
 
 today.core$remove("{}")
 today.core$insert(df)
+
+main_today_core$remove("{}")
+main_today_core$insert(df)

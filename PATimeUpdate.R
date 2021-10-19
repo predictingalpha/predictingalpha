@@ -1,6 +1,6 @@
 #this script is all about running the data
 #this will update the core database
-source("setup.R")
+# source("setup.R")
 library(tidyverse)
 library(quantmod)
 #pull in databases
@@ -8,6 +8,10 @@ summaries = db.earnings.summaries$find()
 earningsestimates = db.earnings.dates$find()
 tickers = tickers.db$find()
 
+# weekly tickers from cboe
+weekly_tickers = html_table(read_html("https://www.cboe.com/us/options/symboldir/weeklys_options"))[[1]] %>%
+  pull(STOCKSYMBOL) %>%
+  sort()
 
 
 # pull orats data
@@ -151,7 +155,6 @@ for (val in 1:nrow(final)){
   this_ticker <- final$Ticker[val]
   
   query <- sprintf('{"Date": "%s", "Ticker":"%s"}', this_date, this_ticker)
-  ticker_query <- paste('{"Ticker" : ', this_ticker, '}')
   
   set_query <- paste('{"$set":', json_strings[val], '}')
   today.core$update(query, set_query, upsert = T)
