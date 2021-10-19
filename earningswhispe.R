@@ -1,10 +1,22 @@
 # 0.0 Libraries ----
 
-source("setup.R")
-library(rvest)
+library(mongolite)
 library(tidyverse)
+library(quantmod)
+library(jsonlite)
+library(rvest)
 library(lubridate)
 library(foreach)
+
+
+#orats api url
+Sys.setenv(TZ = "EST")
+orats.url = 'https://api.orats.io/datav2/cores?token=28a2528a-34e8-448d-877d-c6eb709dc26e'
+urlm = "mongodb+srv://jordan:libraryblackwell7@cluster0.skqv5.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
+options_ssl = ssl_options(weak_cert_validation = TRUE)
+
+db.earnings.dates = mongo(collection = "NextErDates", db = "pa", url = urlm, verbose = F, options = options_ssl)
+db.whisper = mongo(collection = "whisper", db = "pa", url = urlm, verbose = F, options = options_ssl)
 
 
 # 1.0 Earning Whispers Function ----
@@ -107,9 +119,12 @@ db.earnings.dates$remove("{}")
 db.earnings.dates$insert(next30)
 
 
+# 4.0 Disconnecting ----
 
+db.whisper$disconnect(gc = TRUE)
+db.earnings.dates$disconnect(gc = TRUE)
 
-
+q()
 
 
 

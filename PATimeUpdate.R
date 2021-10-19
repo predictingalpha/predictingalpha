@@ -1,8 +1,29 @@
-#this script is all about running the data
-#this will update the core database
-source("setup.R")
+# setup ----
+
+library(mongolite)
 library(tidyverse)
 library(quantmod)
+library(jsonlite)
+library(rvest)
+library(lubridate)
+library(foreach)
+
+
+#orats api url
+Sys.setenv(TZ = "EST")
+orats.url = 'https://api.orats.io/datav2/cores?token=28a2528a-34e8-448d-877d-c6eb709dc26e'
+urlm = "mongodb+srv://jordan:libraryblackwell7@cluster0.skqv5.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
+options_ssl = ssl_options(weak_cert_validation = TRUE)
+
+
+today.core = mongo(collection = "PAtime", db = "pa", url = urlm, verbose = F, options = options_ssl)
+tickers.db = mongo(collection = "Tickers", db = "pa", url = urlm, verbose = F, options = options_ssl)
+db.earnings.dates = mongo(collection = "NextErDates", db = "pa", url = urlm, verbose = F, options = options_ssl)
+db.earnings.summaries = mongo(collection = "Summaries", db = "pa", url = urlm, verbose = F, options = options_ssl)
+db.timeNow = mongo(collection = "update", db = "pa", url = urlm, verbose = F, options = options_ssl)
+
+# code starts here ----
+
 #pull in databases
 summaries = db.earnings.summaries$find()
 earningsestimates = db.earnings.dates$find()
@@ -139,9 +160,6 @@ final = final %>% left_join(timz, by = "Ticker")%>% mutate_if(is.numeric, round,
 dims= dim(final)
 
 
-#----------------------------------- IWM WAS IN FINAL UP TO THIS POINT
-
-
 #### upload to database
 ### if still an issue i can add a parallel feature
 s <- split(final, 1:nrow(final))
@@ -160,3 +178,15 @@ for (val in 1:nrow(final)){
   today.core$update(query, set_query, upsert = T)
 }
 }
+
+# disconnect from mongo ----
+
+today.core$disconnect(gc = TRUE)
+tickers.db$disconnect(gc = TRUE)
+db.earnings.dates$disconnect(gc = TRUE)
+db.earnings.summaries$disconnect(gc = TRUE)
+db.timeNow$disconnect(gc = TRUE)
+
+q()
+
+
