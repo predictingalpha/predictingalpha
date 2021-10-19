@@ -1,6 +1,6 @@
 #this script is all about running the data
 #this will update the core database
-# source("setup.R")
+source("setup.R")
 library(tidyverse)
 library(quantmod)
 #pull in databases
