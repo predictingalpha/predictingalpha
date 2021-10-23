@@ -22,6 +22,7 @@ db.earnings.dates = mongo(collection = "NextErDates", db = "pa", url = urlm, ver
 db.earnings.summaries = mongo(collection = "Summaries", db = "pa", url = urlm, verbose = F, options = options_ssl)
 db.timeNow = mongo(collection = "update", db = "pa", url = urlm, verbose = F, options = options_ssl)
 
+
 # code starts here ----
 
 #pull in databases
@@ -100,17 +101,10 @@ df= df1 %>% mutate(PCR = pvolu/cvolu,
 
 df$ImpMvVsAvgImpmv = ifelse(is.infinite(df$ImpMvVsAvgImpmv), 0, df$ImpMvVsAvgImpmv)
 df$ImpMvVsAvgMv = ifelse(is.infinite(df$ImpMvVsAvgMv), 0, df$ImpMvVsAvgMv)
-df$Type = as.factor(df$Type)
-df$Weekly = as.factor(df$Weekly)
-df$Event = as.factor(df$Event)
-df$MktType = as.factor(df$MktType)
 
 df = df%>% left_join(tickers%>%select(-Type), by = c("ticker" = "Ticker"))
 #will need to add sectors to database here
 #....
-
-df$Industry = as.factor(df$Industry)
-df$Secotr = as.factor(df$Secotr)
 
 df = df %>% rename(
   Ticker = ticker, 

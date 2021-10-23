@@ -9,7 +9,7 @@ currentTicks = tickers.db$find()
 currentTickers = currentTicks %>% pull(Ticker)
 x = jsonlite::fromJSON(orats.url)
 x = x$data
-x = x%>% filter(avgOptVolu20d > 1000, pxAtmIv > 9) #this will be some filter
+x = x %>% filter(avgOptVolu20d > 3000, pxAtmIv > 9) #this will be some filter
 
 
 tickersdb  = x %>% dplyr::select(ticker, assetType)
@@ -22,8 +22,8 @@ tickersdb = tickersdb %>% filter(!(Ticker %in% currentTickers))
 get.sector.data = function(x){tryCatch({
   url = paste0("https://ca.finance.yahoo.com/quote/",x,"/profile?p=", x)
   a = read_html(url)
-  sector = a %>%  html_nodes(xpath = "/html/body/div[1]/div/div/div[1]/div/div[3]/div[1]/div/div[1]/div/div/section/div[1]/div/div/p[2]/span[2]")%>% html_text()
-  industry =  a %>% html_nodes(xpath = "/html/body/div[1]/div/div/div[1]/div/div[3]/div[1]/div/div[1]/div/div/section/div[1]/div/div/p[2]/span[4]")%>%html_text()
+  sector = a %>%  html_nodes(xpath = "//p[2]/span[2]")%>% html_text()
+  industry =  a %>% html_nodes(xpath = "//p[2]/span[4]")%>%html_text()
   
   d = data.frame(Ticker = x, Industry = industry, Secotr = sector)
   

@@ -1,8 +1,6 @@
 source("setup.R")
 tickers = tickers.db$find()
 tickers = tickers$Ticker
-cal = create.calendar('mycal', weekdays = c("saturday", "sunday"))
-bdays = as.character(rev(bizseq(Sys.Date()-320, Sys.Date(), cal)))
 
 registerDoParallel(cores = 8)
 future::plan(future::multisession, 
@@ -52,6 +50,3 @@ df = df %>% group_by(Ticker)%>% mutate(IvChng = log(IV30d/lead(IV30d)))
 
 today.core$remove("{}")
 today.core$insert(df)
-
-main_today_core$remove("{}")
-main_today_core$insert(df)
