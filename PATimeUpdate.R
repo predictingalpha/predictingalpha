@@ -57,10 +57,19 @@ if(y.date != Sys.Date()){
 }else{
   x.date = Sys.Date()-1
 }
+
 #be careful with this as we cant use this since we update intraday
 yesterday = today.core$find(
   sprintf('{"Date":"%s"}', x.date)
 )
+
+if(nrow(yesterday)<1){
+  x.date = Sys.Date()-2
+  yesterday = today.core$find(
+    sprintf('{"Date":"%s"}', x.date)
+  )
+}
+
 n  = names(yesterday)
 yesterday = yesterday %>% dplyr::select(Ticker, IV30d)%>%rename(Iv30Yest = IV30d)
 
@@ -82,12 +91,26 @@ df= df1 %>% mutate(PCR = pvolu/cvolu,
                    PCRoi = poi/coi,
                    Contango = iv60d/iv30d,
                    Event = ifelse(iv30d==exerniv30d,"No","Yes"),
-                   Weekly = ifelse(ticker %in% weekly_tickers, "Yes", "No")
+                   Weekly = ifelse(ticker %in% weekly_tickers, "Yes", "No"),
+                   MktType = ifelse(mktcap < 300, "Micro",
+                                    ifelse(mktcap < 2000, "Small",
+                                           ifelse(mktcap < 10000, "Mid",
+                                                  ifelse(mktcap < 200000, "Large", "Mega"))))
 )
+
+df$ImpMvVsAvgImpmv = ifelse(is.infinite(df$ImpMvVsAvgImpmv), 0, df$ImpMvVsAvgImpmv)
+df$ImpMvVsAvgMv = ifelse(is.infinite(df$ImpMvVsAvgMv), 0, df$ImpMvVsAvgMv)
+df$Type = as.factor(df$Type)
+df$Weekly = as.factor(df$Weekly)
+df$Event = as.factor(df$Event)
+df$MktType = as.factor(df$MktType)
 
 df = df%>% left_join(tickers%>%select(-Type), by = c("ticker" = "Ticker"))
 #will need to add sectors to database here
 #....
+
+df$Industry = as.factor(df$Industry)
+df$Secotr = as.factor(df$Secotr)
 
 df = df %>% rename(
   Ticker = ticker, 
@@ -121,6 +144,7 @@ df = df %>% rename(
   CallVolu = cvolu, 
   PutVolu = pvolu,
   
+  
 )
 
 #https://ca.finance.yahoo.com/quote/AAPL/profile?p=AAPL
@@ -131,6 +155,7 @@ rownames(d) = NULL
 names(d) = c("TradeTime", "Name", "Price", "SpChng", "Ticker")
 d = d %>%dplyr::select(Name, Price, SpChng, Ticker)
 d$Name = ifelse(is.na(d$Name), d$Ticker, d$Name)
+d$SpChng = d$SpChng/100
 
 df.f = left_join(df, d, by = "Ticker")
 
@@ -142,7 +167,7 @@ final = df.f %>% dplyr::select(all_of(c(names.for.selection, "updatedat", "IvChn
                                         "Name", "Type", "IVvsFV", "ImpMvVsAvgImpmv", "ImpMvVsAvgMv", 
                                         "FV30",  "TimeOfDay",  "DayToEr", "Confirmed",  "ErDate", 'orhvxern90d',
                                         "AvgImpMv", "StraddlePnL", "PutPnL", "CallPnL" , "MedMv", "SpChng", 
-                                        "AvgJump", "AvgMv", "Price", "MktCap", "SkewRank", "IvRank", "Secotr", "Industry", "Event", "Weekly")))
+                                        "AvgJump", "AvgMv", "Price", "MktCap", "SkewRank", "IvRank", "Secotr", "Industry", "Event", "Weekly", "MktType")))
 
 #lets tap into data frame and calc some zscores for different ivols
 
@@ -166,7 +191,7 @@ s <- split(final, 1:nrow(final))
 json_strings <- lapply(s, rjson::toJSON)
 
 
-if(dims[1] > 1200 && dims[2] == 101){
+if(dims[1] > 1200 && dims[2] == 102){
  
 for (val in 1:nrow(final)){
   this_date <- final$Date[val]
