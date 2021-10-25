@@ -150,7 +150,6 @@ rownames(d) = NULL
 names(d) = c("TradeTime", "Name", "Price", "SpChng", "Ticker")
 d = d %>%dplyr::select(Name, Price, SpChng, Ticker)
 d$Name = ifelse(is.na(d$Name), d$Ticker, d$Name)
-d$SpChng = d$SpChng/100
 
 df.f = left_join(df, d, by = "Ticker")
 
@@ -177,6 +176,7 @@ timz = bind_rows(patimezAdd, patime4z)
 timz = timz %>% group_by(Ticker)%>% arrange(Date)%>%mutate(IV30zScore = as.numeric(scale(IV30d)), 
                                                            IV120zScore = as.numeric(scale(IV120d)))%>% slice(n())%>%ungroup()%>%dplyr::select(Ticker, IV30zScore, IV120zScore)
 final = final %>% left_join(timz, by = "Ticker")%>% mutate_if(is.numeric, round, 2)
+final$SpChng = final$SpChng/100
 dims= dim(final)
 
 
