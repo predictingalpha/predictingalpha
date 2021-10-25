@@ -71,6 +71,7 @@ if(nrow(yesterday)<1){
   )
 }
 
+
 n  = names(yesterday)
 yesterday = yesterday %>% dplyr::select(Ticker, IV30d)%>%rename(Iv30Yest = IV30d)
 
@@ -101,7 +102,7 @@ df= df1 %>% mutate(PCR = pvolu/cvolu,
 
 df$ImpMvVsAvgImpmv = ifelse(is.infinite(df$ImpMvVsAvgImpmv), 0, df$ImpMvVsAvgImpmv)
 df$ImpMvVsAvgMv = ifelse(is.infinite(df$ImpMvVsAvgMv), 0, df$ImpMvVsAvgMv)
-df$PCR = ifelse(is.infinte(df$PCR), 0, df$PCR)
+df$PCR = ifelse(is.infinite(df$PCR), 0, df$PCR)
 
 df = df%>% left_join(tickers%>%select(-Type), by = c("ticker" = "Ticker"))
 #will need to add sectors to database here
