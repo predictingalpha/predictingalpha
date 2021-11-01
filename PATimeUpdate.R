@@ -65,7 +65,7 @@ yesterday = today.core$find(
 )
 
 if(nrow(yesterday)<1){
-  x.date = Sys.Date()-2
+  x.date = Sys.Date()-3
   yesterday = today.core$find(
     sprintf('{"Date":"%s"}', x.date)
   )
