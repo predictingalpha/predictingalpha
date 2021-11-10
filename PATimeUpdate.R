@@ -41,7 +41,7 @@ x = jsonlite::fromJSON(orats.url)
 x = x$data
 x = x%>% filter(ticker %in% tickers$Ticker)
 names(x) = tolower(names(x))
-x$updatedat = as.character(Sys.time() + 60*60) 
+x$updatedat = as.character(Sys.time()) 
 
 db.timeNow$remove("{}")
 db.timeNow$insert(data.frame(updatedat = x$updatedat[1]))
