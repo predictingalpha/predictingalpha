@@ -90,7 +90,7 @@ whispers = function(from = 0){
 
 # 2.0 Pulling today's earnings ----
 
-today = whispers()%>%
+today = whispers() %>%
   mutate(Confirmed = ifelse(is.na(Confirmed), "No", "Yes")) %>%
   arrange(Date, Ticker)
 
@@ -98,8 +98,10 @@ today = whispers()%>%
 
 # 2.1 Pulling the next 30 day's earnings ----
 
-next30 = foreach(i = 0:30, .combine = "bind_rows", .packages = c("rvest", "stringr", "purrr", "dplyr")) %dopar% {
-  whispers(i)
+next30 = foreach(i = 0:30, .combine = "bind_rows", .packages = c("rvest", "stringr", "purrr", "dplyr")) %do% {
+  tryCatch({
+    whispers(i)
+  }, error = function(e){})
 }
 
 next30 = next30 %>% distinct() %>%
