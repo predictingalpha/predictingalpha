@@ -11,7 +11,8 @@ library(foreach)
 
 #orats api url
 Sys.setenv(TZ = "EST")
-orats.url = 'https://api.orats.io/datav2/cores?token=28a2528a-34e8-448d-877d-c6eb709dc26e'
+# orats.url = 'https://api.orats.io/datav2/cores?token=28a2528a-34e8-448d-877d-c6eb709dc26e'
+orats.url = 'https://api.orats.io/datav2/cores?token=da3db71f-137e-4de2-a225-eed7ed34a2dd'
 urlm = "mongodb+srv://jordan:libraryblackwell7@cluster0.skqv5.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
 options_ssl = ssl_options(weak_cert_validation = TRUE)
 
@@ -37,8 +38,9 @@ weekly_tickers = html_table(read_html("https://www.cboe.com/us/options/symboldir
 
 
 # pull orats data
-x = jsonlite::fromJSON(orats.url)
-x = x$data
+x <- tryCatch({fromJSON(orats.url)[[1]]}, error = function(e){data.frame()})
+if(nrow(x) < 5){q()}
+
 x = x%>% filter(ticker %in% tickers$Ticker)
 names(x) = tolower(names(x))
 x$updatedat = as.character(Sys.time()) 

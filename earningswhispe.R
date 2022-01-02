@@ -1,50 +1,52 @@
-# 0.0 Libraries ----
 
-library(mongolite)
-library(tidyverse)
-library(quantmod)
-library(jsonlite)
-library(rvest)
+# Libraries ----
+
+library(doParallel)
 library(lubridate)
-library(foreach)
+library(mongolite)
+library(rvest)
+library(tidyverse)
 
 
-#orats api url
+
+# Connections/Settings ----
+
 Sys.setenv(TZ = "EST")
-orats.url = 'https://api.orats.io/datav2/cores?token=28a2528a-34e8-448d-877d-c6eb709dc26e'
-urlm = "mongodb+srv://jordan:libraryblackwell7@cluster0.skqv5.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
-options_ssl = ssl_options(weak_cert_validation = TRUE)
+URL <- "mongodb+srv://jordan:libraryblackwell7@cluster0.skqv5.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
+OPTIONS_SSL <- ssl_options(weak_cert_validation = TRUE)
+cores <- detectCores()-1
+registerDoParallel(cores = cores)
 
-db.earnings.dates = mongo(collection = "NextErDates", db = "pa", url = urlm, verbose = F, options = options_ssl)
-db.whisper = mongo(collection = "whisper", db = "pa", url = urlm, verbose = F, options = options_ssl)
+data_ertoday <- mongo(collection = "whisper", db = "pa", url = URL, options = OPTIONS_SSL)
+data_erdates <- mongo(collection = "NextErDates", db = "pa", url = URL, options = OPTIONS_SSL)
 
 
-# 1.0 Earning Whispers Function ----
 
-whispers = function(from = 0){
+# Phase 1 ----
+
+whispers <- function(from = 0){
   
-  # from = today, to = tomorrow - adjusted for weekends (ie. if saturday then tomorrow is monday)
   today = weekdays(Sys.Date() + from)
-  to = ifelse(today=="Friday", from + 3,
-              ifelse(today=="Saturday", from + 2, from + 1))
+  to = ifelse(today == "Friday", from + 3, ifelse(today == "Saturday", from + 2, from + 1))
   
-  # ifelse statement where if today = sat/sun, then just give me monday bmo
-  if(today %in% c("Saturday","Sunday")){
+  if(today %in% c("Saturday", "Sunday")){
     
     link = read_html(paste("https://www.earningswhispers.com/calendar?sb=c&d=",to,"&t=all",sep=""))
     
-    dates <- data.frame(
-      Ticker = html_nodes(link, ".bmo") %>%
-        html_node("div") %>%
-        html_attr("id") %>%
-        str_remove(.,"T-"),
-      Date = Sys.Date() + to,
-      Time = "BMO",
-      Confirmed = html_nodes(link, ".bmo") %>%
-        html_node("div.confirm") %>%
-        html_attr("title"),
-      row.names = NULL
-    ) 
+    dates <- tryCatch({
+      data.frame(
+        Ticker = html_nodes(link, ".bmo") %>%
+          html_node("div") %>%
+          html_attr("id") %>%
+          str_remove(.,"T-"),
+        Date = Sys.Date() + to,
+        Time = "BMO",
+        Confirmed = html_nodes(link, ".bmo") %>%
+          html_node("div.confirm") %>%
+          html_attr("title"),
+        row.names = NULL
+      )
+    }, error = function(e){data.frame()})
     
     return(dates)
     
@@ -53,8 +55,8 @@ whispers = function(from = 0){
     p1 = read_html(paste("https://www.earningswhispers.com/calendar?sb=c&d=",from,"&t=all",sep=""))
     p2 = read_html(paste("https://www.earningswhispers.com/calendar?sb=c&d=",to,"&t=all",sep=""))
     
-    tryCatch({
-      amc <- data.frame(
+    amc <- tryCatch({
+      data.frame(
         Ticker = html_nodes(p1, ".amc") %>%
           html_node("div") %>%
           html_attr("id") %>%
@@ -65,66 +67,64 @@ whispers = function(from = 0){
           html_node("div.confirm") %>%
           html_attr("title"),
         row.names = NULL
-      )}, error = function(e){amc <<- data.frame()})
+      )}, error = function(e){data.frame()})
     
-    bmo <- data.frame(
-      Ticker = html_nodes(p2, ".bmo") %>%
-        html_node("div") %>%
-        html_attr("id") %>%
-        str_remove(.,"T-"),
-      Date = Sys.Date() + to,
-      Time = "BMO",
-      Confirmed = html_nodes(p2, ".bmo") %>%
-        html_node("div.confirm") %>%
-        html_attr("title"),
-      row.names = NULL
-    )
+    bmo <- tryCatch({
+      data.frame(
+        Ticker = html_nodes(p2, ".bmo") %>%
+          html_node("div") %>%
+          html_attr("id") %>%
+          str_remove(.,"T-"),
+        Date = Sys.Date() + to,
+        Time = "BMO",
+        Confirmed = html_nodes(p2, ".bmo") %>%
+          html_node("div.confirm") %>%
+          html_attr("title"),
+        row.names = NULL
+      )}, error = function(e){data.frame()})
     
-    dates = bind_rows(amc,bmo)
+    dates = bind_rows(amc, bmo)
     return(dates)
   }
+}
+
+
+
+# Phase 2 ----
+
+today <- whispers() 
+
+if(nrow(today) > 0){
   
+  today$Confirmed <- ifelse(is.na(today$Confirmed), "No", "Yes")
+  today <- arrange(today, ErDate, Ticker)
 }
 
 
-
-# 2.0 Pulling today's earnings ----
-
-today = whispers() %>%
-  mutate(Confirmed = ifelse(is.na(Confirmed), "No", "Yes")) %>%
-  arrange(Date, Ticker)
-
-
-
-# 2.1 Pulling the next 30 day's earnings ----
-
-next30 = foreach(i = 0:30, .combine = "bind_rows", .packages = c("rvest", "stringr", "purrr", "dplyr")) %do% {
-  tryCatch({
-    whispers(i)
-  }, error = function(e){})
+next30 <- foreach(i = 0:30, .combine = "bind_rows", .packages = c("rvest", "stringr", "dplyr")) %dopar% {
+  whispers(i)
 }
 
-next30 = next30 %>% distinct() %>%
-  rename("ticker" = Ticker, "ErDate" = Date, "TimeOfDay" = Time) %>%
+next30 <- distinct(next30, Ticker, .keep_all = TRUE) %>%
+  rename("ticker" = Ticker, "TimeOfDay" = Time, "ErDate" = Date) %>%
   mutate(Confirmed = ifelse(is.na(Confirmed), "No", "Yes"),
          DayToEr = as.numeric(ErDate - Sys.Date())) %>%
   arrange(ErDate, ticker)
 
 
 
-# 3.0 Inserting into database ----
+# Mongo ----
 
-db.whisper$remove("{}")
-db.whisper$insert(today)
+data_ertoday$remove("{}")
+data_ertoday$insert(today)
 
-db.earnings.dates$remove("{}")
-db.earnings.dates$insert(next30)
+data_erdates$remove("{}")
+data_erdates$insert(next30)
 
 
-# 4.0 Disconnecting ----
+data_ertoday$disconnect(gc = TRUE)
+data_erdates$disconnect(gc = TRUE)
 
-db.whisper$disconnect(gc = TRUE)
-db.earnings.dates$disconnect(gc = TRUE)
 
 q()
 
