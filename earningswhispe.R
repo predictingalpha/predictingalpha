@@ -97,7 +97,7 @@ today <- whispers()
 if(nrow(today) > 0){
   
   today$Confirmed <- ifelse(is.na(today$Confirmed), "No", "Yes")
-  today <- arrange(today, ErDate, Ticker)
+  today <- arrange(today, Date, Ticker)
 }
 
 
